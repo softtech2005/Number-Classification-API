@@ -6,6 +6,7 @@ import os
 app = Flask(__name__)
 CORS(app)
 
+# Helper functions
 def is_prime(number):
     if number < 2:
         return False
@@ -24,10 +25,11 @@ def is_armstrong(number):
 @app.route('/api/classify-number', methods=['GET'])
 def classify_number():
     number_param = request.args.get('number')
-    # Validate the input
+
+    # Input validation
     try:
         number = int(number_param)
-    except ValueError:
+    except (TypeError, ValueError):
         return jsonify({"number": number_param, "error": True}), 400
 
     # Calculate properties
@@ -35,13 +37,13 @@ def classify_number():
     if is_armstrong(number):
         properties.append("armstrong")
     properties.append("odd" if number % 2 != 0 else "even")
-    
+
     # Fetch digit sum
     digit_sum = sum(int(d) for d in str(number))
-    
+
     # Fetch fun fact from Numbers API
     try:
-        fun_fact_response = requests.get(f"http://numbersapi.com/{number}/math")
+        fun_fact_response = requests.get(f"http://numbersapi.com/{number}/math", timeout=5)
         fun_fact_response.raise_for_status()
         fun_fact = fun_fact_response.text
     except requests.exceptions.RequestException:
