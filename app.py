@@ -4,7 +4,7 @@ import requests
 import os
 
 app = Flask(__name__)
-CORS(app, origins=["https://number-classification-api-u9x8.onrender.com/", "http://localhost:5000"])
+CORS(app)
 
 # Helper functions
 def is_prime(number):
