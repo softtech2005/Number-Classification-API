@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import requests
+import aiohttp
+import asyncio
 import os
 
 app = Flask(__name__)
@@ -22,8 +23,17 @@ def is_armstrong(number):
     digits = [int(d) for d in str(number)]
     return number == sum(d**len(digits) for d in digits)
 
+# Asynchronous function to fetch fun fact
+async def fetch_fun_fact(number):
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(f"http://numbersapi.com/{number}/math", timeout=5) as response:
+                return await response.text()
+    except (aiohttp.ClientError, asyncio.TimeoutError):
+        return "Fun fact unavailable."
+
 @app.route('/api/classify-number', methods=['GET'])
-def classify_number():
+async def classify_number():
     number_param = request.args.get('number')
 
     # Input validation
@@ -41,13 +51,8 @@ def classify_number():
     # Fetch digit sum
     digit_sum = sum(int(d) for d in str(number))
 
-    # Fetch fun fact from Numbers API
-    try:
-        fun_fact_response = requests.get(f"http://numbersapi.com/{number}/math", timeout=5)
-        fun_fact_response.raise_for_status()
-        fun_fact = fun_fact_response.text
-    except requests.exceptions.RequestException:
-        fun_fact = "Fun fact unavailable."
+    # Fetch fun fact asynchronously
+    fun_fact = await fetch_fun_fact(number)
 
     # Create response
     response = {
